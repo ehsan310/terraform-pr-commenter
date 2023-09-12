@@ -33,6 +33,8 @@ COMMAND=$1
 INPUT=$(echo "$2" | sed 's/\x1b\[[0-9;]*m//g')
 # Arg 3 is the Terraform CLI exit code
 EXIT_CODE=$3
+# Arg 4 is the environment to print on Comments
+ENVIRONMENT=$4
 
 # Read TF_WORKSPACE environment variable or use "default"
 WORKSPACE=${TF_WORKSPACE:-default}
@@ -60,7 +62,7 @@ PR_COMMENT_URI=$(jq -r ".repository.issue_comment_url" "$GITHUB_EVENT_PATH" | se
 if [[ $COMMAND == 'fmt' ]]; then
   # Look for an existing fmt PR comment and delete
   echo -e "\033[34;1mINFO:\033[0m Looking for an existing fmt PR comment."
-  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `fmt` Failed")) | .id')
+  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `fmt` Failed on `'"$ENVIRONMENT"'` Environment")) | .id')
   if [ "$PR_COMMENT_ID" ]; then
     echo -e "\033[34;1mINFO:\033[0m Found existing fmt PR comment: $PR_COMMENT_ID. Deleting."
     PR_COMMENT_URL="$PR_COMMENT_URI/$PR_COMMENT_ID"
@@ -107,7 +109,7 @@ $THIS_FILE_DIFF
 </details>"
     done
 
-    PR_COMMENT="### Terraform \`fmt\` Failed
+    PR_COMMENT="### Terraform \`fmt\` Failed on \`$ENVIRONMENT\` Environment
 $ALL_FILES_DIFF"
   fi
 
@@ -125,7 +127,7 @@ fi
 if [[ $COMMAND == 'init' ]]; then
   # Look for an existing init PR comment and delete
   echo -e "\033[34;1mINFO:\033[0m Looking for an existing init PR comment."
-  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `init` Failed")) | .id')
+  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `init` Failed on `'"$ENVIRONMENT"'` Environment")) | .id')
   if [ "$PR_COMMENT_ID" ]; then
     echo -e "\033[34;1mINFO:\033[0m Found existing init PR comment: $PR_COMMENT_ID. Deleting."
     PR_COMMENT_URL="$PR_COMMENT_URI/$PR_COMMENT_ID"
@@ -147,7 +149,7 @@ if [[ $COMMAND == 'init' ]]; then
   # Meaning: Terraform initialize failed or malformed Terraform CLI command.
   # Actions: Build PR comment.
   if [[ $EXIT_CODE -eq 1 ]]; then
-    PR_COMMENT="### Terraform \`init\` Failed
+    PR_COMMENT="### Terraform \`init\` Failed on \`$ENVIRONMENT\` Environment
 <details$DETAILS_STATE><summary>Show Output</summary>
 
 \`\`\`
@@ -170,7 +172,7 @@ fi
 if [[ $COMMAND == 'plan' ]]; then
   # Look for an existing plan PR comment and delete
   echo -e "\033[34;1mINFO:\033[0m Looking for an existing plan PR comment."
-  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `plan` .* for Workspace: `'"$WORKSPACE"'`")) | .id')
+  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `plan` .* for Workspace: `'"$WORKSPACE"'` on `'"$ENVIRONMENT"'` Environment")) | .id')
   if [ "$PR_COMMENT_ID" ]; then
     echo -e "\033[34;1mINFO:\033[0m Found existing plan PR comment: $PR_COMMENT_ID. Deleting."
     PR_COMMENT_URL="$PR_COMMENT_URI/$PR_COMMENT_ID"
@@ -189,7 +191,7 @@ if [[ $COMMAND == 'plan' ]]; then
     if [[ $COLOURISE == 'true' ]]; then
       CLEAN_PLAN=$(echo "$CLEAN_PLAN" | sed -r 's/^~/!/g') # Replace ~ with ! to colourise the diff in GitHub comments
     fi
-    PR_COMMENT="### Terraform \`plan\` Succeeded for Workspace: \`$WORKSPACE\`
+    PR_COMMENT="### Terraform \`plan\` Succeeded for Workspace: \`$WORKSPACE\` on \`$ENVIRONMENT\` Environment
 <details$DETAILS_STATE><summary>Show Output</summary>
 
 \`\`\`diff
@@ -202,7 +204,7 @@ $CLEAN_PLAN
   # Meaning: Terraform plan failed.
   # Actions: Build PR comment.
   if [[ $EXIT_CODE -eq 1 ]]; then
-    PR_COMMENT="### Terraform \`plan\` Failed for Workspace: \`$WORKSPACE\`
+    PR_COMMENT="### Terraform \`plan\` Failed for Workspace: \`$WORKSPACE\` on \`$ENVIRONMENT\` Environment
 <details$DETAILS_STATE><summary>Show Output</summary>
 
 \`\`\`
@@ -225,7 +227,7 @@ fi
 if [[ $COMMAND == 'validate' ]]; then
   # Look for an existing validate PR comment and delete
   echo -e "\033[34;1mINFO:\033[0m Looking for an existing validate PR comment."
-  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `validate` Failed")) | .id')
+  PR_COMMENT_ID=$(curl -sS -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -L "$PR_COMMENTS_URL" | jq '.[] | select(.body|test ("### Terraform `validate` Failed on `'"$ENVIRONMENT"'` Environment")) | .id')
   if [ "$PR_COMMENT_ID" ]; then
     echo -e "\033[34;1mINFO:\033[0m Found existing validate PR comment: $PR_COMMENT_ID. Deleting."
     PR_COMMENT_URL="$PR_COMMENT_URI/$PR_COMMENT_ID"
@@ -247,7 +249,7 @@ if [[ $COMMAND == 'validate' ]]; then
   # Meaning: Terraform validate failed or malformed Terraform CLI command.
   # Actions: Build PR comment.
   if [[ $EXIT_CODE -eq 1 ]]; then
-    PR_COMMENT="### Terraform \`validate\` Failed
+    PR_COMMENT="### Terraform \`validate\` Failed on \`$ENVIRONMENT\` Environment
 <details$DETAILS_STATE><summary>Show Output</summary>
 
 \`\`\`
