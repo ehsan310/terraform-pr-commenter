@@ -14,6 +14,10 @@ inputs:
   commenter_exitcode:
     description: 'The exit code from a previous step output'
     required: true
+  commenter_environment:
+    description: 'The environment to print in comment'
+    default: 'default'
+    required: true    
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -21,3 +25,4 @@ runs:
     - ${{ inputs.commenter_type }}
     - ${{ inputs.commenter_input }}
     - ${{ inputs.commenter_exitcode }}
+    - ${{ inputs.commenter_environment }}
