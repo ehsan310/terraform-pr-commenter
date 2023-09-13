@@ -22,6 +22,7 @@ This action can only be run after a Terraform `fmt`, `init`, `plan` or `validate
     commenter_type: fmt/init/plan/validate # Choose one
     commenter_input: ${{ format('{0}{1}', steps.step_id.outputs.stdout, steps.step_id.outputs.stderr) }}
     commenter_exitcode: ${{ steps.step_id.outputs.exitcode }}
+    commenter_environment: "default" # any text you want to see in comment
 ```
 
 ### Inputs
@@ -31,6 +32,7 @@ This action can only be run after a Terraform `fmt`, `init`, `plan` or `validate
 | `commenter_type`     | _required_  | The type of comment. Options: [`fmt`, `init`, `plan`, `validate`] |
 | `commenter_input`    | _required_  | The comment to post from a previous step output.                  |
 | `commenter_exitcode` | _required_  | The exit code from a previous step output.                        |
+| `commenter_environment` | _optional_  | The environment you want to see in comment                     |
 
 ### Environment Variables
 
